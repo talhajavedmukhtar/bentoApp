@@ -1,0 +1,81 @@
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+.app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #879A39;
+    color: #282726;
+}
+
+.heading{
+    text-align: right;
+    padding-right: 1em;
+}
+
+.inputs {
+    display: flex;
+    justify-content: center;
+}
+
+
+.bentoArea {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: #CECDC3;
+    text-align: center;
+}
+
+.inputs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1em;
+}
+
+.inputs > div {
+  text-align: left;
+}
+
+.inputs label {
+  display: block;
+  margin-bottom: -0.5em;
+  font-weight: bold;
+}
+
+.inputs input[type="number"] {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 150px;
+  transition: border-color 0.3s ease-in-out;
+}
+
+.inputs input[type="number"]:focus {
+  outline: none;
+  border-color: #8e44ad; /* Change the border color on focus */
+}
+
+button {
+  align-self: flex-end;
+  margin-top: auto;
+  padding: 1em 2em;
+  background-color: #205EA6;
+  color: #FFFCF0;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: Sen;
+  transition: background-color 0.3s ease-in-out;
+}
+button:hover {
+  background-color: #2980b9; /* Change the background color on hover */
+}
