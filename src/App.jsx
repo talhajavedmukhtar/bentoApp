@@ -126,6 +126,43 @@ function App() {
     return Array.from(options).sort((a, b) => b[2] - a[2]);
   }
 
+  function findSequenceOfLength(number, numbers, length, boxOptions) {
+    /*const nums = [];
+
+    for (let i = 0; i < boxOptions.length; i++) {
+      const size = boxOptions[i].split(",")[2];
+
+      if (numbers.includes(size)) {
+        nums.push(size);
+      }
+    }*/
+
+    const nums = numbers;
+
+    shuffle(nums);
+
+    let foundSequence = [];
+
+    function dfs(target, path) {
+      if (target === 0 && path.length === length) {
+        foundSequence = [...path];
+        return;
+      }
+
+      for (const num of nums) {
+        if (num <= target) {
+          path.push(num);
+          dfs(target - num, path);
+          path.pop();
+        }
+      }
+    }
+
+    dfs(number, []);
+
+    return foundSequence;
+  }
+
   function findSequenceOfLengthBest(number, numbers, length, boxOptions) {
     const nums = [];
 
@@ -138,6 +175,8 @@ function App() {
     }
 
     shuffle(nums);
+
+    console.log("Nums: ",nums)
 
     const dp = Array.from({ length: length + 1 }, () => Array(number + 1).fill(null));
 
@@ -163,6 +202,29 @@ function App() {
     }
 
     return dp[length][number] !== null ? dp[length][number] : [];
+  }
+
+  function generateSequence(targetSum, arr, length) {
+    const result = [];
+
+    function dfs(currentSum, path) {
+      if (currentSum === targetSum && path.length === length) {
+        result.push([...path]);
+        return;
+      }
+
+      for (let i = 0; i < arr.length; i++) {
+        if (currentSum + arr[i] <= targetSum) {
+          path.push(arr[i]);
+          dfs(currentSum + arr[i], path);
+          path.pop();
+        }
+      }
+    }
+
+    dfs(0, []);
+
+    return result;
   }
 
   // Check if there are repetitions in the sequence
@@ -271,9 +333,14 @@ function App() {
 
     const boxOptions = getBoxOptions(minSize, maxSize, width, height);
 
-    const boxSizes = boxOptions.map((x) => x[2]);
+    const boxSizes = boxOptions.map((x) => x.split(",")[2]);
+
+    console.log("Box options: ",boxOptions);
+    console.log("Box sizes: ",boxSizes);
 
     let theSequence = findSequenceOfLengthBest(width * height, boxSizes, numBoxes, boxOptions);
+    //let theSequence = generateSequence(width * height, boxSizes, numBoxes);
+    //shuffle(theSequence);
     theSequence.sort((a, b) => b - a);
 
     setSequence(theSequence.toString());
@@ -289,127 +356,134 @@ function App() {
     let numBoxesSoFar = 0
     let currentPath = []
 
-    while (!bentoIsFilledAppropriately(field, numBoxesSoFar, numBoxes)) {
-      const relevantBoxSize = theSequence[numBoxesSoFar];
-      const relevantBoxOptions = getBoxOptionsFromSize(minSize, maxSize, relevantBoxSize, width, height);
+    if(theSequence.length > 0){
+      while (!bentoIsFilledAppropriately(field, numBoxesSoFar, numBoxes)) {
+        const relevantBoxSize = theSequence[numBoxesSoFar];
+        const relevantBoxOptions = getBoxOptionsFromSize(minSize, maxSize, relevantBoxSize, width, height);
 
-      let newBoxCanBeAdded = false;
-      let newBoxOption = null;
-      let newBoxIndex = null;
+        let newBoxCanBeAdded = false;
+        let newBoxOption = null;
+        let newBoxIndex = null;
 
-      console.log("relevantBoxSize: ",relevantBoxSize);
-      console.log("relevantBoxOptions: ",relevantBoxOptions);
+        console.log("relevantBoxSize: ",relevantBoxSize);
+        console.log("relevantBoxOptions: ",relevantBoxOptions);
 
-      for (const boxOption of relevantBoxOptions) {
-          const candidateIndices = findCandidateIndices(field, boxOption);
-          console.log("candidateIndices: ",candidateIndices);
-          const validCandidateIndices = [];
+        for (const boxOption of relevantBoxOptions) {
+            const candidateIndices = findCandidateIndices(field, boxOption);
+            //console.log("candidateIndices: ",candidateIndices);
+            const validCandidateIndices = [];
 
-          for (const candidateIndex of candidateIndices) {
-              const pathStr = `${candidateIndex},${boxOption}`;
-              if (!retrieveForbiddenPaths(forbiddenPathsDict, String(currentPath)).includes(pathStr)) {
-                  console.log("ValidCandidate: ",candidateIndex,boxOption)
-                  validCandidateIndices.push(candidateIndex);
-              }
-          }
+            for (const candidateIndex of candidateIndices) {
+                const pathStr = `${candidateIndex},${boxOption}`;
+                if (!retrieveForbiddenPaths(forbiddenPathsDict, String(currentPath)).includes(pathStr)) {
+                    //console.log("ValidCandidate: ",candidateIndex,boxOption)
+                    validCandidateIndices.push(candidateIndex);
+                }
+            }
 
-          if (validCandidateIndices.length > 0) {
-              newBoxCanBeAdded = true;
-              newBoxOption = boxOption;
-              newBoxIndex = validCandidateIndices[Math.floor(Math.random() * validCandidateIndices.length)];
-              /*
-              if (validCandidateIndices.some(index => index[0] === 0 && index[1] === 0)) {
-                newBoxIndex = [0, 0];
-              } else {
-                newBoxIndex = validCandidateIndices[Math.floor(Math.random() * validCandidateIndices.length)];
-              }*/
-              break;
-          }
+            if (validCandidateIndices.length > 0) {
+                newBoxCanBeAdded = true;
+                newBoxOption = boxOption;
+                const randomIndex = Math.floor(Math.random() * validCandidateIndices.length)
+                console.log("vc length: ",validCandidateIndices.length)
+                console.log("randomIndex: ",randomIndex)
+                newBoxIndex = validCandidateIndices[randomIndex];
+                /*
+                if (validCandidateIndices.some(index => index[0] === 0 && index[1] === 0)) {
+                  newBoxIndex = [0, 0];
+                } else {
+                  newBoxIndex = validCandidateIndices[Math.floor(Math.random() * validCandidateIndices.length)];
+                }*/
+                break;
+            }
+        }
+
+        if (newBoxCanBeAdded) {
+            prevPrevNumBoxes = prevNumBoxes;
+            prevPrevState = _.cloneDeep(prevState);
+            prevNumBoxes = numBoxesSoFar;
+            prevState = _.cloneDeep(field);
+            const augmentedField = augmentWithBox(field, newBoxIndex, newBoxOption, numBoxesSoFar);
+            field = _.cloneDeep(augmentedField);
+            numBoxesSoFar++;
+
+            currentPath.push([newBoxOption, newBoxIndex]);
+        } else {
+            if (currentPath.length === 0) {
+                field = createField(width, height);
+
+                prevPrevNumBoxes = 0;
+                prevPrevState = _.cloneDeep(field);
+
+                prevNumBoxes = 0;
+                prevState = _.cloneDeep(field);
+
+                numBoxesSoFar = 0;
+            } else {
+                const [lastBoxPosition, lastBoxOption] = currentPath.pop();
+
+                storeForbiddenPath(forbiddenPathsDict, String(currentPath), lastBoxPosition, lastBoxOption);
+
+                if (currentPath.length === 0) {
+                    field = createField(width, height);
+
+                    prevPrevNumBoxes = 0;
+                    prevPrevState = _.cloneDeep(field);
+
+                    prevNumBoxes = 0;
+                    prevState = _.cloneDeep(field);
+
+                    numBoxesSoFar = 0;
+                } else {
+                    numBoxesSoFar = prevNumBoxes;
+                    field = _.cloneDeep(prevState);
+
+                    prevNumBoxes = prevPrevNumBoxes;
+                    prevState = _.cloneDeep(prevPrevState);
+                }
+            }
+        }
+
+        runNumber++;
+
+        if (runNumber % 1 === 0) {
+            console.log(runNumber, numBoxesSoFar);
+            console.log("path: ",currentPath);
+            console.log("numBoxesSoFar: ",numBoxesSoFar)
+        }
+
+        if (runNumber % 10 === 0) {
+            visualizeField(field, width, height).then((visualized) => setField(visualized));
+        }
+
+        if (runNumber % 10000 === 0) {
+            break;
+        }
+
+
+        if (prevNumBoxes === prevPrevNumBoxes && prevNumBoxes === numBoxesSoFar) {
+            theSequence = findSequenceOfLengthBest(width * height, boxOptions.map(x => x.split(",")[2]), numBoxes, boxOptions);
+            //let theSequence = generateSequence(width * height, boxSizes, numBoxes);
+            theSequence.sort((a, b) => b - a);
+
+            setSequence(theSequence.toString())
+
+            field = createField(width, height);
+
+            prevPrevNumBoxes = 0;
+            prevPrevState = _.cloneDeep(field);
+
+            prevNumBoxes = 0;
+            prevState = _.cloneDeep(field);
+
+            numBoxesSoFar = 0;
+            currentPath = [];
+        }
       }
 
-      if (newBoxCanBeAdded) {
-          prevPrevNumBoxes = prevNumBoxes;
-          prevPrevState = _.cloneDeep(prevState);
-          prevNumBoxes = numBoxesSoFar;
-          prevState = _.cloneDeep(field);
-          const augmentedField = augmentWithBox(field, newBoxIndex, newBoxOption, numBoxesSoFar);
-          field = _.cloneDeep(augmentedField);
-          numBoxesSoFar++;
+      visualizeField(field, width, height).then((visualized) => setField(visualized));
 
-          currentPath.push([newBoxOption, newBoxIndex]);
-      } else {
-          if (currentPath.length === 0) {
-              field = createField(width, height);
-
-              prevPrevNumBoxes = 0;
-              prevPrevState = _.cloneDeep(field);
-
-              prevNumBoxes = 0;
-              prevState = _.cloneDeep(field);
-
-              numBoxesSoFar = 0;
-          } else {
-              const [lastBoxPosition, lastBoxOption] = currentPath.pop();
-
-              storeForbiddenPath(forbiddenPathsDict, String(currentPath), lastBoxPosition, lastBoxOption);
-
-              if (currentPath.length === 0) {
-                  field = createField(width, height);
-
-                  prevPrevNumBoxes = 0;
-                  prevPrevState = _.cloneDeep(field);
-
-                  prevNumBoxes = 0;
-                  prevState = _.cloneDeep(field);
-
-                  numBoxesSoFar = 0;
-              } else {
-                  numBoxesSoFar = prevNumBoxes;
-                  field = _.cloneDeep(prevState);
-
-                  prevNumBoxes = prevPrevNumBoxes;
-                  prevState = _.cloneDeep(prevPrevState);
-              }
-          }
-      }
-
-      runNumber++;
-
-      if (runNumber % 1 === 0) {
-          console.log(runNumber, numBoxesSoFar);
-          console.log("path: ",currentPath);
-          console.log("numBoxesSoFar: ",numBoxesSoFar)
-      }
-
-      if (runNumber % 10 === 0) {
-          visualizeField(field, width, height).then((visualized) => setField(visualized));
-      }
-
-      if (runNumber % 10 === 0) {
-          break;
-      }
-
-
-      if (prevNumBoxes === prevPrevNumBoxes && prevNumBoxes === numBoxesSoFar) {
-          theSequence = findSequenceOfLengthBest(width * height, boxOptions.map(x => x[2]), numBoxes, boxOptions);
-          theSequence.sort((a, b) => b - a);
-
-          setSequence(theSequence.toString())
-
-          field = createField(width, height);
-
-          prevPrevNumBoxes = 0;
-          prevPrevState = _.cloneDeep(field);
-
-          prevNumBoxes = 0;
-          prevState = _.cloneDeep(field);
-
-          numBoxesSoFar = 0;
-          currentPath = [];
-      }
     }
-
-    visualizeField(field, width, height).then((visualized) => setField(visualized));
     setProcessing(false)
   };
 
@@ -454,8 +528,7 @@ function App() {
       </div>
 
       <div className="bentoArea">
-        {(processing ? "Please wait..." : "Oh")}
-        <br/>
+        {processing && <p>Please wait... Loading</p>}
         <br/>
         {(sequence.length > 0 ? sequence : "Invalid num of boxes")}
         <br/>
