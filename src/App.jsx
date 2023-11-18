@@ -9,6 +9,8 @@ import { ColorRing } from  'react-loader-spinner'
 function App() {
   const _ = require('lodash');
 
+  const isMobile = window.innerWidth <= 768;
+
   const firebaseConfig = {
   apiKey: "AIzaSyDs7OhdjYAaLsZeDBEXyxi3hGxfIVEmnac",
   authDomain: "bento-app-b64c5.firebaseapp.com",
@@ -57,7 +59,11 @@ function App() {
 
   // Function to visualize the field
   const visualizeField = async (field,w,h) => {
-    const size = 10 / (w > h ? w : 2*h);
+    let size = 10 / (w > h ? w : 2*h);
+
+    if(isMobile){
+      size = size/2;
+    }
 
     const boxSize = `${size}em`
 
@@ -93,7 +99,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    console.log("Processing changed: ",processing)
+    //console.log("Processing changed: ",processing)
   }, [processing]);
 
   const handleWidthChange = (e) => {
@@ -180,7 +186,7 @@ function App() {
 
     shuffle(nums);
 
-    console.log("Nums: ",nums)
+    //console.log("Nums: ",nums)
 
     const dp = Array.from({ length: length + 1 }, () => Array(number + 1).fill(null));
 
@@ -261,7 +267,7 @@ function App() {
         }
     }
 
-    console.log("Bento filled? ",numBoxesSoFar === numBoxes,numBoxesSoFar,numBoxes);
+    //console.log("Bento filled? ",numBoxesSoFar === numBoxes,numBoxesSoFar,numBoxes);
 
     return numBoxesSoFar === numBoxes;
   }
@@ -282,7 +288,7 @@ function App() {
 
   function getBoxOptionsFromSize(minSize, maxSize, size, width, height) {
     const boxOptions = getBoxOptions(minSize, maxSize, width, height);
-    console.log("Box ops: ",boxOptions, " size: ",size)
+    //console.log("Box ops: ",boxOptions, " size: ",size)
     return boxOptions.filter(x => x.split(",")[2] === size);
   }
 
@@ -310,7 +316,7 @@ function App() {
   }
 
   function augmentWithBox(field, index, boxOptionString, newChar) {
-    console.log("Augmentation time!!! ", index)
+    //console.log("Augmentation time!!! ", index)
     const fieldCopy = field.map(row => [...row]); // Deep copy of the field
 
     const boxOption = boxOptionString.split(",")
@@ -320,7 +326,7 @@ function App() {
     const [x, y] = index;
     for (let i = x; i < x + boxHeight; i++) {
         for (let j = y; j < y + boxWidth; j++) {
-            console.log("Augmentation time!!!XXX")
+            //console.log("Augmentation time!!!XXX")
             fieldCopy[i][j] = `*${newChar}`;
         }
     }
@@ -339,8 +345,8 @@ function App() {
 
     const boxSizes = boxOptions.map((x) => x.split(",")[2]);
 
-    console.log("Box options: ",boxOptions);
-    console.log("Box sizes: ",boxSizes);
+    //console.log("Box options: ",boxOptions);
+    //console.log("Box sizes: ",boxSizes);
 
     let theSequence = findSequenceOfLengthBest(width * height, boxSizes, numBoxes, boxOptions);
     //let theSequence = generateSequence(width * height, boxSizes, numBoxes);
@@ -369,18 +375,18 @@ function App() {
         let newBoxOption = null;
         let newBoxIndex = null;
 
-        console.log("relevantBoxSize: ",relevantBoxSize);
-        console.log("relevantBoxOptions: ",relevantBoxOptions);
+        //console.log("relevantBoxSize: ",relevantBoxSize);
+        //console.log("relevantBoxOptions: ",relevantBoxOptions);
 
         for (const boxOption of relevantBoxOptions) {
             const candidateIndices = findCandidateIndices(field, boxOption);
-            //console.log("candidateIndices: ",candidateIndices);
+            ////console.log("candidateIndices: ",candidateIndices);
             const validCandidateIndices = [];
 
             for (const candidateIndex of candidateIndices) {
                 const pathStr = `${candidateIndex},${boxOption}`;
                 if (!retrieveForbiddenPaths(forbiddenPathsDict, String(currentPath)).includes(pathStr)) {
-                    //console.log("ValidCandidate: ",candidateIndex,boxOption)
+                    ////console.log("ValidCandidate: ",candidateIndex,boxOption)
                     validCandidateIndices.push(candidateIndex);
                 }
             }
@@ -389,8 +395,8 @@ function App() {
                 newBoxCanBeAdded = true;
                 newBoxOption = boxOption;
                 const randomIndex = Math.floor(Math.random() * validCandidateIndices.length)
-                console.log("vc length: ",validCandidateIndices.length)
-                console.log("randomIndex: ",randomIndex)
+                //console.log("vc length: ",validCandidateIndices.length)
+                //console.log("randomIndex: ",randomIndex)
                 newBoxIndex = validCandidateIndices[randomIndex];
                 /*
                 if (validCandidateIndices.some(index => index[0] === 0 && index[1] === 0)) {
@@ -451,9 +457,9 @@ function App() {
         runNumber++;
 
         if (runNumber % 1 === 0) {
-            console.log(runNumber, numBoxesSoFar);
-            console.log("path: ",currentPath);
-            console.log("numBoxesSoFar: ",numBoxesSoFar)
+            //console.log(runNumber, numBoxesSoFar);
+            //console.log("path: ",currentPath);
+            //console.log("numBoxesSoFar: ",numBoxesSoFar)
         }
 
         if (runNumber % 10 === 0) {
@@ -511,7 +517,7 @@ function App() {
       const field = e.data;
       // Update state or UI based on the result
 
-      console.log("Message!!!: ",field)
+      //console.log("Message!!!: ",field)
 
       if(!field){
         setError(true)

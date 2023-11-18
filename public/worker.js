@@ -105,9 +105,9 @@ function findSequenceOfLengthBest(number, numbers, length, boxOptions) {
 
   shuffle(nums);
 
-  console.log("sum: ",number)
-  console.log("Nums: ",nums)
-  console.log("seq demanded length: ",length)
+  //console.log("sum: ",number)
+  //console.log("Nums: ",nums)
+  //console.log("seq demanded length: ",length)
 
   const dp = Array.from({ length: length + 1 }, () => Array(number + 1).fill(null));
 
@@ -216,7 +216,7 @@ function bentoIsFilledAppropriately(field, numBoxesSoFar, numBoxes) {
       }
   }
 
-  console.log("Bento filled? ",numBoxesSoFar === numBoxes,numBoxesSoFar,numBoxes);
+  //console.log("Bento filled? ",numBoxesSoFar === numBoxes,numBoxesSoFar,numBoxes);
 
   return numBoxesSoFar === numBoxes;
 }
@@ -237,7 +237,7 @@ function retrieveForbiddenPaths(forbiddenPathsDict, basePath) {
 
 function getBoxOptionsFromSize(minSize, maxSize, size, width, height) {
   const boxOptions = getBoxOptions(minSize, maxSize, width, height);
-  console.log("Box ops: ",boxOptions, " size: ",size)
+  //console.log("Box ops: ",boxOptions, " size: ",size)
   return boxOptions.filter(x => x.split(",")[2] === size);
 }
 
@@ -265,7 +265,7 @@ function findCandidateIndices(field, boxOptionString) {
 }
 
 function augmentWithBox(field, index, boxOptionString, newChar) {
-  console.log("Augmentation time!!! ", index)
+  //console.log("Augmentation time!!! ", index)
   const fieldCopy = field.map(row => [...row]); // Deep copy of the field
 
   const boxOption = boxOptionString.split(",")
@@ -275,7 +275,7 @@ function augmentWithBox(field, index, boxOptionString, newChar) {
   const [x, y] = index;
   for (let i = x; i < x + boxHeight; i++) {
       for (let j = y; j < y + boxWidth; j++) {
-          console.log("Augmentation time!!!XXX")
+          //console.log("Augmentation time!!!XXX")
           fieldCopy[i][j] = `*${newChar}`;
       }
   }
@@ -293,18 +293,18 @@ onmessage = function (e) {
 
   const boxSizes = boxOptions.map((x) => x.split(",")[2]);
 
-  console.log("Box options: ",boxOptions);
-  console.log("Box sizes: ",boxSizes);
+  //console.log("Box options: ",boxOptions);
+  //console.log("Box sizes: ",boxSizes);
 
   let theSequence = findSequenceOfLengthBest(width * height, boxSizes, numBoxes, boxOptions);
   //let theSequence = generateSequence(width * height, boxSizes, numBoxes);
   //shuffle(theSequence);
   theSequence.sort((a, b) => b - a);
 
-  console.log("Sequence: ",theSequence)
+  //console.log("Sequence: ",theSequence)
 
   if(theSequence.length == 0){
-    console.log("Non seq")
+    //console.log("Non seq")
     theSequence = findSequenceOfLengthSecondBest(width * height, boxSizes, numBoxes, boxOptions);
 
     if(theSequence.length == 0){
@@ -334,18 +334,18 @@ onmessage = function (e) {
       let newBoxOption = null;
       let newBoxIndex = null;
 
-      console.log("relevantBoxSize: ",relevantBoxSize);
-      console.log("relevantBoxOptions: ",relevantBoxOptions);
+      //console.log("relevantBoxSize: ",relevantBoxSize);
+      //console.log("relevantBoxOptions: ",relevantBoxOptions);
 
       for (const boxOption of relevantBoxOptions) {
           const candidateIndices = findCandidateIndices(field, boxOption);
-          //console.log("candidateIndices: ",candidateIndices);
+          ////console.log("candidateIndices: ",candidateIndices);
           const validCandidateIndices = [];
 
           for (const candidateIndex of candidateIndices) {
               const pathStr = `${candidateIndex},${boxOption}`;
               if (!retrieveForbiddenPaths(forbiddenPathsDict, String(currentPath)).includes(pathStr)) {
-                  //console.log("ValidCandidate: ",candidateIndex,boxOption)
+                  ////console.log("ValidCandidate: ",candidateIndex,boxOption)
                   validCandidateIndices.push(candidateIndex);
               }
           }
@@ -354,8 +354,8 @@ onmessage = function (e) {
               newBoxCanBeAdded = true;
               newBoxOption = boxOption;
               const randomIndex = Math.floor(Math.random() * validCandidateIndices.length)
-              console.log("vc length: ",validCandidateIndices.length)
-              console.log("randomIndex: ",randomIndex)
+              //console.log("vc length: ",validCandidateIndices.length)
+              //console.log("randomIndex: ",randomIndex)
               newBoxIndex = validCandidateIndices[randomIndex];
               /*
               if (validCandidateIndices.some(index => index[0] === 0 && index[1] === 0)) {
@@ -416,9 +416,9 @@ onmessage = function (e) {
       runNumber++;
 
       if (runNumber % 1 === 0) {
-          console.log(runNumber, numBoxesSoFar);
-          console.log("path: ",currentPath);
-          console.log("numBoxesSoFar: ",numBoxesSoFar)
+          //console.log(runNumber, numBoxesSoFar);
+          //console.log("path: ",currentPath);
+          //console.log("numBoxesSoFar: ",numBoxesSoFar)
       }
 
       if (runNumber % 10 === 0) {
@@ -437,7 +437,7 @@ onmessage = function (e) {
           theSequence.sort((a, b) => b - a);
 
           if(theSequence.length == 0){
-            console.log("Non seq")
+            //console.log("Non seq")
             theSequence = findSequenceOfLengthSecondBest(width * height, boxSizes, numBoxes, boxOptions);
 
             if(theSequence.length == 0){
