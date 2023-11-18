@@ -68,7 +68,7 @@ button {
   align-self: flex-end;
   margin-top: auto;
   padding: 1em 2em;
-  background-color: #205EA6;
+  background-color: #BC5215;
   color: #FFFCF0;
   border: none;
   border-radius: 5px;
@@ -76,6 +76,15 @@ button {
   font-family: Sen;
   transition: background-color 0.3s ease-in-out;
 }
+
 button:hover {
-  background-color: #2980b9; /* Change the background color on hover */
+  background-color: #DA702C; /* Change the background color on hover */
+}
+
+.spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100px; /* Adjust height as needed */
 }

@@ -2,6 +2,9 @@ import React, {useState, useEffect} from 'react';
 import './App.css'; 
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
+import { ColorRing } from  'react-loader-spinner'
+//import Worker from './worker.js';
+
 
 function App() {
   const _ = require('lodash');
@@ -22,13 +25,14 @@ function App() {
 
   const [width, setWidth] = useState(8)
   const [height, setHeight] = useState(4)
-  const [numBoxes, setNumBoxes] = useState(8)
-  const [minSize, setMinSize] = useState(2)
+  const [numBoxes, setNumBoxes] = useState(7)
+  const [minSize, setMinSize] = useState(1)
   const [maxSize, setMaxSize] = useState(4)
 
   const [sequence, setSequence] = useState([])
   const [field, setField] = useState([]);
   const [processing, setProcessing] = useState(false)
+  const [error, setError] = useState(false)
 
   const createField = (width, height) => {
     const newField = Array.from({ length: height }, () =>
@@ -487,7 +491,38 @@ function App() {
     setProcessing(false)
   };
 
+  // Handle generating a new field
+  const handleGenerateFieldWithWorker = async () => {
+    await setProcessing(true);
 
+    const worker = new window.Worker("worker.js"); // Create a new instance of the worker
+
+    // Send data to the worker
+    worker.postMessage({
+      width,
+      height,
+      numBoxes,
+      minSize,
+      maxSize,
+    });
+
+    worker.onmessage = function (e) {
+      // Handle the result sent back from the worker
+      const field = e.data;
+      // Update state or UI based on the result
+
+      console.log("Message!!!: ",field)
+
+      if(!field){
+        setError(true)
+      }else{
+        setError(false)
+        visualizeField(field, width, height).then((visualized) => setField(visualized));
+      }
+
+      setProcessing(false); // Set processing state to false after computation
+    };
+  };
 
   return (
     <div className="app">
@@ -524,17 +559,25 @@ function App() {
           <input type="number" id="input5" placeholder={maxSize} value={maxSize} onChange={handleMaxSizeChange} min="1"/>
         </div>
 
-        <button onClick={handleGenerateField}> Generate </button>
+        <button onClick={handleGenerateFieldWithWorker}> Generate </button>
       </div>
 
       <div className="bentoArea">
-        {processing && <p>Please wait... Loading</p>}
-        <br/>
-        {(sequence.length > 0 ? sequence : "Invalid num of boxes")}
-        <br/>
-        <br/>
-        <br/>
-        {field}
+        {processing && 
+          (<div>
+            <ColorRing
+              visible={processing}
+              height="80"
+              width="80"
+              ariaLabel="blocks-loading"
+              wrapperStyle={{}}
+              wrapperClass="blocks-wrapper"
+              colors={['#879A39', '#879A39', '#879A39', '#879A39', '#879A39']}
+            />
+            <p> Please wait. </p>
+          </div>)}
+        {!processing && error && <p>Invalid num of boxes</p>}
+        {!processing && !error && field}
       </div>
       
     </div>

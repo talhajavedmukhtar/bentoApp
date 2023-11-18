@@ -3,11 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@koale/useworker": "^4.0.2",
     "firebase": "^10.6.0",
     "lodash": "^4.17.21",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1"
+    "react-loader-spinner": "^5.4.5",
+    "react-scripts": "5.0.1",
+    "react-spinners": "^0.13.8",
+    "worker-loader": "^3.0.8"
   },
   "scripts": {
     "start": "react-scripts start",
