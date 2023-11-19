@@ -35,6 +35,8 @@ function App() {
   const [field, setField] = useState([]);
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("")
+  const [progress, setProgress] = useState(0)
 
   const createField = (width, height) => {
     const newField = Array.from({ length: height }, () =>
@@ -521,9 +523,17 @@ function App() {
 
       if(!field){
         setError(true)
+        setErrorMessage("Invalid num of boxes")
       }else{
-        setError(false)
-        visualizeField(field, width, height).then((visualized) => setField(visualized));
+        if(field == "partial"){
+          setError(true)
+          setErrorMessage("Inputs seem valid, but I couldn't find a solution...\n Please try again!")
+        }else if(Number.isInteger(field)){
+          setProgress(field)
+        } else{
+          setError(false)
+          visualizeField(field, width, height).then((visualized) => setField(visualized));
+        }
       }
 
       setProcessing(false); // Set processing state to false after computation
@@ -582,8 +592,9 @@ function App() {
             />
             <p> Please wait. </p>
           </div>)}
-        {!processing && error && <p>Invalid num of boxes</p>}
+        {!processing && error && <p>{errorMessage}</p>}
         {!processing && !error && field}
+
       </div>
       
     </div>
