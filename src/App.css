@@ -74,11 +74,11 @@ html, body, #root {
   }
 
   .inputs input[type="number"] {
-    width: 30px;
+    width: 60px;
   }
 
   .inputs label {
-    font-size: 0.6em;
+    font-size: 0.8em;
   }
 
   button {
