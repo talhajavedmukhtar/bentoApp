@@ -2,7 +2,8 @@ import React, {useState, useEffect} from 'react';
 import './App.css'; 
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { ColorRing } from  'react-loader-spinner'
+import { ColorRing } from  'react-loader-spinner';
+import sha256 from 'js-sha256';
 //import Worker from './worker.js';
 
 
@@ -37,6 +38,12 @@ function App() {
   const [error, setError] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
   const [progress, setProgress] = useState(0)
+  const [visualizing, setVisualizing] = useState(true)
+
+  
+  useEffect(()=>{
+    console.log("Visualizing now: ",visualizing)
+  }, [visualizing])
 
   const createField = (width, height) => {
     const newField = Array.from({ length: height }, () =>
@@ -47,9 +54,13 @@ function App() {
 
   // Function to convert a string to a color
   const stringToColor = async (string) => {
-    const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(string));
+    /*const hashBuffer = await crypto.subtle.digestSync('SHA-256', new TextEncoder().encode(string));
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');*/
+
+    const hash = sha256.create().update(string).hex();
+
+    const hashHex = hash.substring(0, 18);
 
     // Generate warm colors by focusing on the warm spectrum
     const r = parseInt(hashHex.substring(0, 6), 16) % 256; // Red component
@@ -61,6 +72,9 @@ function App() {
 
   // Function to visualize the field
   const visualizeField = async (field,w,h) => {
+    let rand = Math.floor(Math.random() * 2000)
+    console.log("???Lets get it:", rand)
+
     let size = 10 / (w > h ? w : 2*h);
 
     if(isMobile){
@@ -76,7 +90,7 @@ function App() {
         const color = field[i][j] === '**' ? '#FFFCF0' : await stringToColor(field[i][j]);
         row.push(
           <div
-            key={`${i}-${j}`}
+            key={`${i}-${j}-${rand}`}
             style={{
               width: boxSize,
               height: boxSize,
@@ -89,15 +103,20 @@ function App() {
           />
         );
       }
-      visualizedField.push(<div key={i} style={{lineHeight: '0em'}}>{row}</div>);
+      visualizedField.push(<div key={`${i}-${rand}`} style={{lineHeight: '0em'}}>{row}</div>);
     }
+
+    console.log("Lets get it???:", rand)
     return visualizedField;
   };
 
   // Create initial field when component mounts
   useEffect(() => {
     const initialField = createField(width, height);
-    visualizeField(initialField, width, height).then((visualized) => setField(visualized));
+    visualizeField(initialField, width, height).then((visualized) => {
+      setField(visualized)
+      setVisualizing(false)
+    });
   }, []);
 
   useEffect(() => {
@@ -519,24 +538,37 @@ function App() {
       const field = e.data;
       // Update state or UI based on the result
 
-      //console.log("Message!!!: ",field)
+     // console.log("Message!!!: ",field)
 
       if(!field){
         setError(true)
         setErrorMessage("Invalid num of boxes")
+        setProcessing(false); 
       }else{
         if(field == "partial"){
           setError(true)
           setErrorMessage("Inputs seem valid, but I couldn't find a solution...\n Please try again!")
+          setProcessing(false); 
+        }else if(field == "complete"){
+          setProcessing(false); 
         }else if(Number.isInteger(field)){
           setProgress(field)
         } else{
           setError(false)
-          visualizeField(field, width, height).then((visualized) => setField(visualized));
+          if(!visualizing){
+            setVisualizing(true)
+            visualizeField(field, width, height).then((visualized) => {
+              console.log("Done bro")
+              setField(visualized)
+              //setVisualizing(false)
+            }).finally(() => {
+              console.log("bro!")
+              setVisualizing(false);
+            });
+          }
         }
       }
-
-      setProcessing(false); // Set processing state to false after computation
+      
     };
   };
 
@@ -594,7 +626,7 @@ function App() {
           </div>)}
         {!processing && error && <p>{errorMessage}</p>}
         {!processing && !error && field}
-
+        {/*progress*/}
       </div>
       
     </div>

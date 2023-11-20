@@ -422,11 +422,11 @@ onmessage = function (e) {
       }
 
       if (runNumber % 10 === 0) {
-          //visualizeField(field, width, height).then((visualized) => setField(visualized));
+        //visualizeField(field, width, height).then((visualized) => setField(visualized));
         //postMessage(field);
       }
 
-      if (runNumber % 100000 === 0) {
+      if (runNumber % 10000 === 0) {
           break;
       }
 
@@ -458,10 +458,13 @@ onmessage = function (e) {
           numBoxesSoFar = 0;
           currentPath = [];
       }
+
+      //console.log("Posting run number: ",runNumber);
+      //postMessage(runNumber);
     }
 
     //visualizeField(field, width, height).then((visualized) => setField(visualized));
-    postMessage(runNumber);
+
   }
 
   
@@ -469,6 +472,7 @@ onmessage = function (e) {
   if(theSequence.length > 0){
     if(bentoIsFilledAppropriately(field, numBoxesSoFar, numBoxes)){
       postMessage(field);
+      postMessage("complete");
     }else{
       postMessage("partial");
     }
