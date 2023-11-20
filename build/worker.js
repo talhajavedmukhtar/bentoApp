@@ -426,7 +426,7 @@ onmessage = function (e) {
         //postMessage(field);
       }
 
-      if (runNumber % 3000 === 0) {
+      if (runNumber % 100000 === 0) {
           break;
       }
 
@@ -461,12 +461,17 @@ onmessage = function (e) {
     }
 
     //visualizeField(field, width, height).then((visualized) => setField(visualized));
-
+    postMessage(runNumber);
   }
 
   
   // Post the result back to the main thread
   if(theSequence.length > 0){
-    postMessage(field);
+    if(bentoIsFilledAppropriately(field, numBoxesSoFar, numBoxes)){
+      postMessage(field);
+    }else{
+      postMessage("partial");
+    }
   }
+
 };

@@ -63,8 +63,36 @@ html, body, #root {
 
 .inputs input[type="number"]:focus {
   outline: none;
-  border-color: #8e44ad; /* Change the border color on focus */
+  border-color: #8e44ad; 
 }
+
+@media (max-width: 768px) {
+  .inputs {
+    margin-bottom: 0.1em;
+    padding-left: 2em;
+    padding-right: 2em;
+  }
+
+  .inputs input[type="number"] {
+    width: 30px;
+  }
+
+  .inputs label {
+    font-size: 0.6em;
+  }
+
+  button {
+    /*height: 2.8em;
+    width: 30px;*/
+    text-align: center;
+    padding: 0.85em 1.2em !important;
+  }
+
+  .inputs {
+    padding-bottom: 2em;
+  }
+}
+
 
 button {
   align-self: flex-end;

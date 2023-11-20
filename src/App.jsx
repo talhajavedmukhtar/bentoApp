@@ -575,7 +575,7 @@ function App() {
           <input type="number" id="input5" placeholder={maxSize} value={maxSize} onChange={handleMaxSizeChange} min="1"/>
         </div>
 
-        <button onClick={handleGenerateFieldWithWorker}> Generate </button>
+        <button onClick={handleGenerateFieldWithWorker}> {isMobile ? "GO" : "Generate"} </button>
       </div>
 
       <div className="bentoArea">
