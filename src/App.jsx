@@ -33,12 +33,19 @@ function App() {
   const [maxSize, setMaxSize] = useState(4)
 
   const [sequence, setSequence] = useState([])
+  const [sequenceNumber, setSequenceNumber] = useState(1)
   const [field, setField] = useState([]);
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
   const [progress, setProgress] = useState(0)
   const [visualizing, setVisualizing] = useState(true)
+
+  const [maxPopulated, setMaxPopulated] = useState(0)
+  const [currentPath, setCurrentPath] = useState([])
+
+  const [currentWorker, setCurrentWorker] = useState(null)
+  const [timeTaken, setTimetaken] = useState(0)
 
   
   useEffect(()=>{
@@ -70,6 +77,43 @@ function App() {
     return `rgb(${r}, ${g}, ${b})`;
   };
 
+  const stringToColorAlt = async (string) => {
+    // Generate the hash using the string (e.g., using SHA-256)
+    const hash = sha256.create().update(string).hex();
+    /*const second = sha256.create().update(first).hex();
+    const third = sha256.create().update(second).hex();
+    const hash = sha256.create().update(third).hex();*/
+
+    // Split the hash into segments for R, G, B values
+    const segments = [
+        hash.substring(0, 6),  // Red
+        hash.substring(6, 12), // Green
+        hash.substring(12, 18) // Blue
+    ];
+
+    // Convert each segment into decimal values and adjust them to darker warm colors
+    const darkenValue = 60; // Change this value to adjust darkness (0-255)
+
+    const r = Math.max((parseInt(segments[0], 16) % 128) + 128 - darkenValue, 0); // Red component
+    const g = Math.max((parseInt(segments[1], 16) % 128) + 128 - darkenValue, 0); // Green component
+    const b = Math.max((parseInt(segments[2], 16) % 128) + 128 - darkenValue, 0); // Blue component
+
+    return `rgb(${r}, ${g}, ${b})`;
+  };
+
+  const stringToGrayscale = (string) => {
+    const num = parseInt(string.substring(1)); // Extract the numeric part (excluding '*')
+
+    // Map the numeric value to a grayscale shade (0-255)
+    const grayscaleValue = Math.round((num / 20) * 255); // Adjust the divisor to control the range of shades
+
+    // Generate grayscale color in rgb format
+    const grayscaleColor = `rgb(${grayscaleValue}, ${grayscaleValue}, ${grayscaleValue})`;
+
+    return grayscaleColor;
+  };
+
+
   // Function to visualize the field
   const visualizeField = async (field,w,h) => {
     let rand = Math.floor(Math.random() * 2000)
@@ -89,6 +133,18 @@ function App() {
       for (let j = 0; j < field[0].length; j++) {
         const color = field[i][j] === '**' ? '#FFFCF0' : await stringToColor(field[i][j]);
         row.push(
+          /*<div
+            key={`${i}-${j}-${rand}`}
+            style={{
+              width: boxSize,
+              height: boxSize,
+              backgroundColor: color,
+              padding: boxSize,
+              marginRight: '0em',
+              border: '1px solid #282726',
+              display: 'inline-block',
+            }}
+          ><p>{field[i][j]}</p></div>*/
           <div
             key={`${i}-${j}-${rand}`}
             style={{
@@ -518,11 +574,21 @@ function App() {
     setProcessing(false)
   };
 
+  const isDictionary = (obj) => {
+    return obj !== null && typeof obj === 'object' && !Array.isArray(obj);
+  }
+
   // Handle generating a new field
   const handleGenerateFieldWithWorker = async () => {
+    const startTime = performance.now();
     await setProcessing(true);
 
+    if (currentWorker) {
+      currentWorker.terminate();
+    }
+
     const worker = new window.Worker("worker.js"); // Create a new instance of the worker
+    setCurrentWorker(worker)
 
     // Send data to the worker
     worker.postMessage({
@@ -544,17 +610,39 @@ function App() {
         setError(true)
         setErrorMessage("Invalid num of boxes")
         setProcessing(false); 
+        setTimetaken(0)
       }else{
         if(field == "partial"){
           setError(true)
           setErrorMessage("Inputs seem valid, but I couldn't find a solution...\n Please try again!")
           setProcessing(false); 
+          setTimetaken(0)
         }else if(field == "complete"){
-          setProcessing(false); 
-        }else if(Number.isInteger(field)){
-          setProgress(field)
-        } else{
           setError(false)
+          setProcessing(false)
+        }else if(Number.isInteger(field)){
+          setError(false)
+          setProgress(field)
+        }else if(isDictionary(field)){
+          if(field.hasOwnProperty("sequence")){
+            console.log("Seq: ",field)
+            setSequence(field["sequence"])
+            setSequenceNumber(field["id"])
+          }
+
+          if(field.hasOwnProperty("maxBoxes")){
+            setMaxPopulated(field["maxBoxes"] + " :: " + field["beenSame"])
+          }
+
+          if(field.hasOwnProperty("currentPath")){
+            setCurrentPath(field["currentPath"])
+          }
+        }else{
+          setError(false)
+          setProcessing(false)
+          const endTime = performance.now();
+          const timeTaken = endTime - startTime;
+          setTimetaken(timeTaken)
           if(!visualizing){
             setVisualizing(true)
             visualizeField(field, width, height).then((visualized) => {
@@ -626,7 +714,20 @@ function App() {
           </div>)}
         {!processing && error && <p>{errorMessage}</p>}
         {!processing && !error && field}
-        {/*progress*/}
+
+
+        {/*Seq: {sequence.toString()}
+        <br/>
+        Seq Num: {sequenceNumber}*/}
+        {/*<br/>
+        Progress: {progress}*/}
+        {/*<br/>
+        Max populated: {maxPopulated}
+        <br/>
+        Current Path: ({currentPath.length}) : {JSON.stringify(currentPath)}*/}
+
+        <br/>
+        {!processing && <p>{timeTaken == 0 ? "" : "Time taken: " + (timeTaken/ 1000).toFixed(2) + " s / " + (timeTaken/ 60000).toFixed(2) + " m"}</p>}
       </div>
       
     </div>

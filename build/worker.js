@@ -231,6 +231,7 @@ function storeForbiddenPath(forbiddenPathsDict, path, position, boxOption) {
   }
 }
 
+
 function retrieveForbiddenPaths(forbiddenPathsDict, basePath) {
     return forbiddenPathsDict[basePath] || [];
 }
@@ -264,6 +265,127 @@ function findCandidateIndices(field, boxOptionString) {
   return indices;
 }
 
+function isAtLeastMAdjacentInAllRectangles(field,width,height){
+  return (isAtLeastMAdjacentInAllRectanglesHorizontal(field,width) && isAtLeastMAdjacentInAllRectanglesVertical(field,height));
+}
+
+function isAtLeastMAdjacentInAllRectanglesVertical(field, minSize) {
+  const rows = field.length;
+  const cols = field[0].length;
+
+  // Helper function to perform DFS
+  function dfs(row, col, visited) {
+    if (
+      row < 0 || row >= rows ||
+      col < 0 || col >= cols ||
+      visited[row][col] || field[row][col] !== "**"
+    ) {
+      return 0;
+    }
+
+    visited[row][col] = true;
+
+    let count = 1;
+    count += dfs(row - 1, col, visited); // Up
+    count += dfs(row + 1, col, visited); // Down
+    //count += dfs(row, col - 1, visited); // Left
+    //count += dfs(row, col + 1, visited); // Right
+
+    return count;
+  }
+
+  // Check all possible rectangles in the field
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      if (field[i][j] === "**") {
+        const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
+        const count = dfs(i, j, visited);
+
+        if (count > 0 && count < minSize) {
+          return false; // Rectangle found but not meeting minSize requirement
+        }
+      }
+    }
+  }
+
+  return true; // All rectangles in the field meet the minSize requirement
+}
+
+function isAtLeastMAdjacentInAllRectanglesHorizontal(field, minSize) {
+  const rows = field.length;
+  const cols = field[0].length;
+
+  // Helper function to perform DFS
+  function dfs(row, col, visited) {
+    if (
+      row < 0 || row >= rows ||
+      col < 0 || col >= cols ||
+      visited[row][col] || field[row][col] !== "**"
+    ) {
+      return 0;
+    }
+
+    visited[row][col] = true;
+
+    let count = 1;
+    //count += dfs(row - 1, col, visited); // Up
+    //count += dfs(row + 1, col, visited); // Down
+    count += dfs(row, col - 1, visited); // Left
+    count += dfs(row, col + 1, visited); // Right
+
+    return count;
+  }
+
+  // Check all possible rectangles in the field
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      if (field[i][j] === "**") {
+        const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
+        const count = dfs(i, j, visited);
+
+        if (count > 0 && count < minSize) {
+          return false; // Rectangle found but not meeting minSize requirement
+        }
+      }
+    }
+  }
+
+  return true; // All rectangles in the field meet the minSize requirement
+}
+
+
+function hasWHAdjacentEmpty(matrix, W, H) {
+  const rows = matrix.length;
+  const cols = matrix[0].length;
+
+  for (let i = 1; i < rows; i++) {
+    for (let j = 1; j < cols; j++) {
+      if (matrix[i][j] === '**') {
+        let countWidth = 0;
+        let countHeight = 0;
+
+        // Check adjacent empty spots to the right
+        for (let k = j; k < cols && matrix[i][k] === '**'; k++) {
+          countWidth++;
+        }
+
+        // Check adjacent empty spots downwards
+        for (let k = i; k < rows && matrix[k][j] === '**'; k++) {
+          countHeight++;
+        }
+
+        if (countWidth === W && countHeight === H) {
+          continue;
+        } else {
+          return false;
+        }
+      }
+    }
+  }
+
+  return true;
+}
+
 function augmentWithBox(field, index, boxOptionString, newChar) {
   //console.log("Augmentation time!!! ", index)
   const fieldCopy = field.map(row => [...row]); // Deep copy of the field
@@ -283,7 +405,61 @@ function augmentWithBox(field, index, boxOptionString, newChar) {
   return fieldCopy;
 }
 
-onmessage = function (e) {
+
+function delay(iterations) {
+  let toy = 0
+
+  for (let i = 0; i < iterations; i++) {
+    if (i % 1 === 0) {
+      toy += 1
+    }
+  }
+
+  return toy
+}
+
+function checkMinDimensions(matrix, minNumber) {
+  const rows = matrix.length;
+  const cols = matrix[0].length;
+  let smallestWidth = Infinity;
+  let smallestHeight = Infinity;
+
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      if (matrix[i][j] === '**') {
+        let width = 1;
+        let height = 1;
+
+        // Calculate width
+        for (let k = j + 1; k < cols && matrix[i][k] === '**'; k++) {
+          width++;
+        }
+
+        // Calculate height
+        for (let k = i + 1; k < rows && matrix[k][j] === '**'; k++) {
+          height++;
+        }
+
+        if (width < smallestWidth) {
+          smallestWidth = width;
+        }
+        if (height < smallestHeight) {
+          smallestHeight = height;
+        }
+      }
+    }
+  }
+
+  console.log("Threshes: ",smallestWidth,smallestHeight)
+
+  if (smallestWidth < minNumber || smallestHeight < minNumber) {
+    return false;
+  }
+
+  return true;
+}
+
+function base(e) {
   // Receive the data sent from the main thread
   const { width, height, numBoxes, minSize, maxSize } = e.data;
 
@@ -298,8 +474,10 @@ onmessage = function (e) {
 
   let theSequence = findSequenceOfLengthBest(width * height, boxSizes, numBoxes, boxOptions);
   //let theSequence = generateSequence(width * height, boxSizes, numBoxes);
-  //shuffle(theSequence);
-  theSequence.sort((a, b) => b - a);
+  shuffle(theSequence);
+  //theSequence.sort((a, b) => b - a);
+
+  let triedSequences = 1
 
   //console.log("Sequence: ",theSequence)
 
@@ -309,26 +487,45 @@ onmessage = function (e) {
 
     if(theSequence.length == 0){
       postMessage(null)
+    }else{
+      triedSequences += 1
+      postMessage({"sequence": theSequence, "id": triedSequences})
     }
+  }else{
+    triedSequences += 1
+    postMessage({"sequence": theSequence, "id": triedSequences})
   }
 
   //setSequence(theSequence.toString());
+
+  let stateStack = []
 
   let prevPrevState = _.cloneDeep(field);
   let prevState = _.cloneDeep(field);
 
   let prevPrevNumBoxes = 0;
   let prevNumBoxes = 0;
+
+  stateStack.push({"numBoxes":0, "field":_.cloneDeep(field)})
+
   const forbiddenPathsDict = {};
+  const forbiddenSequencesSet = new Set();
   let runNumber = 0;
 
   let numBoxesSoFar = 0
   let currentPath = []
 
+  let stucknessMeter = 0
+  let maxBoxes = 0
+  let maxBoxesBeenSame = 0
+  let popFactor = 10
+
   if(theSequence.length > 0){
     while (!bentoIsFilledAppropriately(field, numBoxesSoFar, numBoxes)) {
       const relevantBoxSize = theSequence[numBoxesSoFar];
       const relevantBoxOptions = getBoxOptionsFromSize(minSize, maxSize, relevantBoxSize, width, height);
+
+      shuffle(relevantBoxOptions)
 
       let newBoxCanBeAdded = false;
       let newBoxOption = null;
@@ -344,21 +541,31 @@ onmessage = function (e) {
 
           for (const candidateIndex of candidateIndices) {
               const pathStr = `${candidateIndex},${boxOption}`;
+              console.log("Path str: ",pathStr)
               if (!retrieveForbiddenPaths(forbiddenPathsDict, String(currentPath)).includes(pathStr)) {
                   ////console.log("ValidCandidate: ",candidateIndex,boxOption)
                   validCandidateIndices.push(candidateIndex);
               }
           }
 
+          validCandidateIndices.sort((a, b) => {
+            if (a[1] === b[1]) {
+              return a[0] - b[0]; // Sort by x if y coordinates are equal
+            }
+            return a[1] - b[1]; // Otherwise, sort by y
+          });
+
           if (validCandidateIndices.length > 0) {
               newBoxCanBeAdded = true;
               newBoxOption = boxOption;
-              const randomIndex = Math.floor(Math.random() * validCandidateIndices.length)
+              const randomIndex = /*Math.floor(Math.random() * validCandidateIndices.length)*/ 0
               //console.log("vc length: ",validCandidateIndices.length)
               //console.log("randomIndex: ",randomIndex)
               newBoxIndex = validCandidateIndices[randomIndex];
-              /*
-              if (validCandidateIndices.some(index => index[0] === 0 && index[1] === 0)) {
+
+              console.log("About to shoot shot::: index: ",newBoxIndex," box: ",newBoxOption, " all indices: ",JSON.stringify(validCandidateIndices)," forbiddenPathsDict: ",JSON.stringify(forbiddenPathsDict))
+              
+              /*if (validCandidateIndices.some(index => index[0] === 0 && index[1] === 0)) {
                 newBoxIndex = [0, 0];
               } else {
                 newBoxIndex = validCandidateIndices[Math.floor(Math.random() * validCandidateIndices.length)];
@@ -368,15 +575,75 @@ onmessage = function (e) {
       }
 
       if (newBoxCanBeAdded) {
-          prevPrevNumBoxes = prevNumBoxes;
-          prevPrevState = _.cloneDeep(prevState);
-          prevNumBoxes = numBoxesSoFar;
-          prevState = _.cloneDeep(field);
           const augmentedField = augmentWithBox(field, newBoxIndex, newBoxOption, numBoxesSoFar);
           field = _.cloneDeep(augmentedField);
-          numBoxesSoFar++;
 
-          currentPath.push([newBoxOption, newBoxIndex]);
+          if(!isAtLeastMAdjacentInAllRectangles(field,Math.min(...theSequence))){
+            if(stateStack.length != 0){
+              prevStateFromStack = stateStack.pop()
+
+              numBoxesSoFar = prevStateFromStack["numBoxes"]
+              field = _.cloneDeep(prevStateFromStack["field"]);
+
+              maxBoxes = numBoxesSoFar
+              maxBoxesBeenSame = 0
+              postMessage({"maxBoxes": maxBoxes, "beenSame":maxBoxesBeenSame})
+            } else {
+              field = createField(width, height);
+
+              prevPrevNumBoxes = 0;
+              prevPrevState = _.cloneDeep(field);
+
+              prevNumBoxes = 0;
+              prevState = _.cloneDeep(field);
+
+              numBoxesSoFar = 0;
+
+              //
+              stateStack = []
+              currentPath = []
+              stateStack.push({"numBoxes":numBoxesSoFar, "field":_.cloneDeep(field)})
+              ///
+            }
+
+            storeForbiddenPath(forbiddenPathsDict, String(currentPath), newBoxIndex, newBoxOption);
+
+
+          } else {
+            //
+            stateStack.push({"numBoxes":numBoxesSoFar+1, "field":_.cloneDeep(field)})
+
+            numBoxesSoFar++;
+
+            if(numBoxesSoFar <= maxBoxes){
+              maxBoxesBeenSame += 1
+              postMessage({"maxBoxes": maxBoxes, "beenSame":maxBoxesBeenSame})
+            }else{
+              maxBoxes = numBoxesSoFar
+              maxBoxesBeenSame = 0
+              postMessage({"maxBoxes": maxBoxes, "beenSame":maxBoxesBeenSame})
+            }
+            ///
+            /// 
+
+            currentPath.push([newBoxOption, newBoxIndex]);
+          }
+
+          /*
+          //
+          stateStack.push({"numBoxes":numBoxesSoFar, "field":_.cloneDeep(field)})
+
+          if(numBoxesSoFar <= maxBoxes){
+            maxBoxesBeenSame += 1
+            postMessage({"maxBoxes": maxBoxes, "beenSame":maxBoxesBeenSame})
+          }else{
+            maxBoxes = numBoxesSoFar
+            maxBoxesBeenSame = 0
+            postMessage({"maxBoxes": maxBoxes, "beenSame":maxBoxesBeenSame})
+          }
+          ///*/
+
+          
       } else {
           if (currentPath.length === 0) {
               field = createField(width, height);
@@ -388,12 +655,17 @@ onmessage = function (e) {
               prevState = _.cloneDeep(field);
 
               numBoxesSoFar = 0;
+
+              //
+              stateStack = []
+              stateStack.push({"numBoxes":numBoxesSoFar, "field":_.cloneDeep(field)})
+              ///
           } else {
               const [lastBoxPosition, lastBoxOption] = currentPath.pop();
 
               storeForbiddenPath(forbiddenPathsDict, String(currentPath), lastBoxPosition, lastBoxOption);
 
-              if (currentPath.length === 0) {
+              if (currentPath.length === 0 || stateStack.length === 0) {
                   field = createField(width, height);
 
                   prevPrevNumBoxes = 0;
@@ -403,12 +675,27 @@ onmessage = function (e) {
                   prevState = _.cloneDeep(field);
 
                   numBoxesSoFar = 0;
+
+                  //
+                  stateStack = []
+                  stateStack.push({"numBoxes":numBoxesSoFar, "field":_.cloneDeep(field)})
+                  ///
+                  /// 
+                  /// 
               } else {
                   numBoxesSoFar = prevNumBoxes;
                   field = _.cloneDeep(prevState);
 
                   prevNumBoxes = prevPrevNumBoxes;
                   prevState = _.cloneDeep(prevPrevState);
+
+                  //
+                  prevStateFromStack = stateStack.pop()
+                  prevStateFromStack = stateStack.pop()
+                  numBoxesSoFar = prevStateFromStack["numBoxes"]
+                  field = _.cloneDeep(prevStateFromStack["field"]);
+                  ///
+                  /// 
               }
           }
       }
@@ -421,9 +708,11 @@ onmessage = function (e) {
           //console.log("numBoxesSoFar: ",numBoxesSoFar)
       }
 
-      if (runNumber % 10 === 0) {
-          //visualizeField(field, width, height).then((visualized) => setField(visualized));
-        //postMessage(field);
+      if (runNumber % 1 === 0) {
+        //visualizeField(field, width, height).then((visualized) => setField(visualized));
+        postMessage(field);
+        postMessage({"currentPath": currentPath})
+        delay(1000000000);
       }
 
       if (runNumber % 100000 === 0) {
@@ -432,16 +721,30 @@ onmessage = function (e) {
 
 
       if (prevNumBoxes === prevPrevNumBoxes && prevNumBoxes === numBoxesSoFar) {
-          theSequence = findSequenceOfLengthBest(width * height, boxOptions.map(x => x.split(",")[2]), numBoxes, boxOptions);
-          //let theSequence = generateSequence(width * height, boxSizes, numBoxes);
-          theSequence.sort((a, b) => b - a);
 
-          if(theSequence.length == 0){
-            //console.log("Non seq")
-            theSequence = findSequenceOfLengthSecondBest(width * height, boxSizes, numBoxes, boxOptions);
+        if (stucknessMeter > 10000){
+          stucknessMeter = 0;
+
+          forbiddenSequencesSet.add(theSequence.sort((a, b) => b - a))
+
+          while(forbiddenSequencesSet.has(theSequence.sort((a, b) => b - a))){
+            theSequence = findSequenceOfLengthBest(width * height, boxOptions.map(x => x.split(",")[2]), numBoxes, boxOptions);
+            //let theSequence = generateSequence(width * height, boxSizes, numBoxes);
+            theSequence.sort((a, b) => b - a);
 
             if(theSequence.length == 0){
-              postMessage(null)
+              //console.log("Non seq")
+              theSequence = findSequenceOfLengthSecondBest(width * height, boxSizes, numBoxes, boxOptions);
+
+              if(theSequence.length == 0){
+                postMessage(null)
+              } else {
+                triedSequences += 1
+                postMessage({"sequence": theSequence, "id": triedSequences})
+              }
+            }else{
+              triedSequences += 1
+              postMessage({"sequence": theSequence, "id": triedSequences})
             }
           }
 
@@ -457,11 +760,42 @@ onmessage = function (e) {
 
           numBoxesSoFar = 0;
           currentPath = [];
+
+          //
+          stateStack = []
+          stateStack.push({"numBoxes":numBoxesSoFar, "field":_.cloneDeep(field)})
+          ///
+        }else{
+          stucknessMeter += 1
+        }
+          
       }
+
+      //
+      if(maxBoxesBeenSame > 500){
+        //
+        for (let i = 0; i < popFactor; i++) {
+          if (stateStack.length > 1) {
+            prevStateFromStack = stateStack.pop()
+          }
+        }
+        
+        numBoxesSoFar = prevStateFromStack["numBoxes"]
+        field = _.cloneDeep(prevStateFromStack["field"]);
+
+        maxBoxes = numBoxesSoFar
+        maxBoxesBeenSame = 0
+        postMessage({"maxBoxes": maxBoxes, "beenSame":maxBoxesBeenSame})
+        ///
+      }
+      ///
+
+      //console.log("Posting run number: ",runNumber);
+      postMessage(runNumber);
     }
 
     //visualizeField(field, width, height).then((visualized) => setField(visualized));
-    postMessage(runNumber);
+
   }
 
   
@@ -469,6 +803,400 @@ onmessage = function (e) {
   if(theSequence.length > 0){
     if(bentoIsFilledAppropriately(field, numBoxesSoFar, numBoxes)){
       postMessage(field);
+      postMessage("complete");
+    }else{
+      postMessage("partial");
+    }
+  }
+
+};
+
+
+function dos(e) {
+  // Receive the data sent from the main thread
+  const { width, height, numBoxes, minSize, maxSize } = e.data;
+
+  let field = createField(width, height);
+
+  const boxOptions = getBoxOptions(minSize, maxSize, width, height);
+
+  const boxSizes = boxOptions.map((x) => x.split(",")[2]);
+
+  let theSequence = findSequenceOfLengthBest(width * height, boxSizes, numBoxes, boxOptions);
+  shuffle(theSequence);
+  //theSequence.sort((a, b) => b - a);
+
+  let triedSequences = 1
+
+
+  if(theSequence.length == 0){
+    //console.log("Non seq")
+    theSequence = findSequenceOfLengthSecondBest(width * height, boxSizes, numBoxes, boxOptions);
+
+    if(theSequence.length == 0){
+      postMessage(null)
+    }else{
+      triedSequences += 1
+      postMessage({"sequence": theSequence, "id": triedSequences})
+    }
+  }else{
+    triedSequences += 1
+    postMessage({"sequence": theSequence, "id": triedSequences})
+  }
+
+  let stateStack = []
+
+  stateStack.push({"numBoxes":0, "field":_.cloneDeep(field)})
+
+  const forbiddenPathsDict = {};
+  const forbiddenSequencesSet = new Set();
+  let runNumber = 0;
+
+  let numBoxesSoFar = 0
+  let currentPath = []
+
+  let stucknessMeter = 0
+
+  if(theSequence.length > 0){
+    while (!bentoIsFilledAppropriately(field, numBoxesSoFar, numBoxes)) {
+      const relevantBoxSize = theSequence[numBoxesSoFar];
+      const relevantBoxOptions = getBoxOptionsFromSize(minSize, maxSize, relevantBoxSize, width, height);
+
+      shuffle(relevantBoxOptions)
+
+      let newBoxCanBeAdded = false;
+      let newBoxOption = null;
+      let newBoxIndex = null;
+
+      for (const boxOption of relevantBoxOptions) {
+          const candidateIndices = findCandidateIndices(field, boxOption);
+          const validCandidateIndices = [];
+
+          for (const candidateIndex of candidateIndices) {
+              const pathStr = `${candidateIndex},${boxOption}`;
+              if (!retrieveForbiddenPaths(forbiddenPathsDict, String(currentPath)).includes(pathStr)) {
+                  validCandidateIndices.push(candidateIndex);
+              }
+          }
+
+          validCandidateIndices.sort((a, b) => {
+            if (a[1] === b[1]) {
+              return a[0] - b[0]; 
+            }
+            return a[1] - b[1]; 
+          });
+
+          if (validCandidateIndices.length > 0) {
+              newBoxCanBeAdded = true;
+              newBoxOption = boxOption;
+              newBoxIndex = validCandidateIndices[0];
+
+              console.log("About to shoot shot::: index: ",newBoxIndex," box: ",newBoxOption, " all indices: ",JSON.stringify(validCandidateIndices)," forbiddenPathsDict: ",JSON.stringify(forbiddenPathsDict))
+              
+              break;
+          }
+      }
+
+      if (newBoxCanBeAdded) {
+          const augmentedField = augmentWithBox(field, newBoxIndex, newBoxOption, numBoxesSoFar);
+          field = _.cloneDeep(augmentedField);
+
+          if(!isAtLeastMAdjacentInAllRectangles(field,Math.min(...theSequence.slice(numBoxesSoFar)))){
+            storeForbiddenPath(forbiddenPathsDict, String(currentPath), newBoxIndex, newBoxOption);
+            if(stateStack.length != 0){
+              prevStateFromStack = stateStack.pop()
+              //currentPath.pop()
+
+              numBoxesSoFar = prevStateFromStack["numBoxes"]
+              field = _.cloneDeep(prevStateFromStack["field"]);
+            } else {
+              field = createField(width, height);
+
+              numBoxesSoFar = 0;
+
+              //
+              stateStack = []
+              currentPath = []
+              stateStack.push({"numBoxes":numBoxesSoFar, "field":_.cloneDeep(field)})
+              ///
+            }
+
+
+          } else {
+            //
+            stateStack.push({"numBoxes":numBoxesSoFar+1, "field":_.cloneDeep(field)})
+
+            numBoxesSoFar++;
+            ///
+            /// 
+
+            currentPath.push([newBoxOption, newBoxIndex]);
+          }
+          
+      } else {
+          if (currentPath.length === 0) {
+              field = createField(width, height);
+
+              numBoxesSoFar = 0;
+
+              //
+              stateStack = []
+              stateStack.push({"numBoxes":numBoxesSoFar, "field":_.cloneDeep(field)})
+              ///
+          } else {
+              const [lastBoxPosition, lastBoxOption] = currentPath.pop();
+
+              storeForbiddenPath(forbiddenPathsDict, String(currentPath), lastBoxPosition, lastBoxOption);
+
+              if (currentPath.length === 0 || stateStack.length === 0) {
+                  field = createField(width, height);
+
+                  numBoxesSoFar = 0;
+
+                  //
+                  stateStack = []
+                  stateStack.push({"numBoxes":numBoxesSoFar, "field":_.cloneDeep(field)})
+                  ///
+              } else {
+                  //
+                  prevStateFromStack = stateStack.pop()
+                  currentPath.pop()
+                  numBoxesSoFar = prevStateFromStack["numBoxes"]
+                  field = _.cloneDeep(prevStateFromStack["field"]);
+                  ///
+                  /// 
+              }
+          }
+      }
+
+      runNumber++;
+
+      if (runNumber % 1 === 0) {
+        postMessage(field);
+        postMessage({"currentPath": currentPath})
+        delay(1000000000);
+      }
+
+      if (runNumber % 100000 === 0) {
+          break;
+      }
+
+      postMessage(runNumber);
+    }
+
+  }
+
+  
+  // Post the result back to the main thread
+  if(theSequence.length > 0){
+    if(bentoIsFilledAppropriately(field, numBoxesSoFar, numBoxes)){
+      postMessage(field);
+      postMessage("complete");
+    }else{
+      postMessage("partial");
+    }
+  }
+
+};
+
+onmessage = function (e) {
+  // Receive the data sent from the main thread
+  const { width, height, numBoxes, minSize, maxSize } = e.data;
+
+  let field = createField(width, height);
+
+  const boxOptions = getBoxOptions(minSize, maxSize, width, height);
+
+  const boxSizes = boxOptions.map((x) => x.split(",")[2]);
+
+  let theSequence = findSequenceOfLengthBest(width * height, boxSizes, numBoxes, boxOptions);
+  shuffle(theSequence);
+  //theSequence.sort((a, b) => b - a);
+
+  let triedSequences = 1
+
+
+  if(theSequence.length == 0){
+    //console.log("Non seq")
+    theSequence = findSequenceOfLengthSecondBest(width * height, boxSizes, numBoxes, boxOptions);
+
+    if(theSequence.length == 0){
+      postMessage(null)
+    }else{
+      triedSequences += 1
+      postMessage({"sequence": theSequence, "id": triedSequences})
+    }
+  }else{
+    triedSequences += 1
+    postMessage({"sequence": theSequence, "id": triedSequences})
+  }
+
+  let stateStack = []
+
+  stateStack.push({"numBoxes":0, "field":_.cloneDeep(field), "currentPath": []})
+
+  const forbiddenPathsDict = {};
+  const forbiddenSequencesSet = new Set();
+  let runNumber = 0;
+
+  let numBoxesSoFar = 0
+  let currentPath = []
+
+  let stucknessMeter = 0
+
+  if(theSequence.length > 0){
+    while (!bentoIsFilledAppropriately(field, numBoxesSoFar, numBoxes)) {
+      const relevantBoxSize = theSequence[numBoxesSoFar];
+      const relevantBoxOptions = getBoxOptionsFromSize(minSize, maxSize, relevantBoxSize, width, height);
+
+      shuffle(relevantBoxOptions)
+
+      let newBoxCanBeAdded = false;
+      let newBoxOption = null;
+      let newBoxIndex = null;
+
+      for (const boxOption of relevantBoxOptions) {
+          const candidateIndices = findCandidateIndices(field, boxOption);
+          const validCandidateIndices = [];
+
+          for (const candidateIndex of candidateIndices) {
+              //const pathStr = `${candidateIndex},${boxOption}`;
+              const pathStr = `${boxOption},${candidateIndex}`;
+              console.log("Path str: ",pathStr)
+              console.log("Retrieve: ",retrieveForbiddenPaths(forbiddenPathsDict, String(currentPath)))
+              if (!retrieveForbiddenPaths(forbiddenPathsDict, String(currentPath)).includes(pathStr)) {
+                  validCandidateIndices.push(candidateIndex);
+              } else{
+                console.log("Forbidden!!!")
+              }
+          }
+
+          validCandidateIndices.sort((a, b) => {
+            if (a[1] === b[1]) {
+              return a[0] - b[0]; 
+            }
+            return a[1] - b[1]; 
+          });
+
+          if (validCandidateIndices.length > 0) {
+              newBoxCanBeAdded = true;
+              newBoxOption = boxOption;
+              newBoxIndex = validCandidateIndices[0];
+
+              console.log("About to shoot shot::: index: ",newBoxIndex," box: ",newBoxOption, " all indices: ",JSON.stringify(validCandidateIndices)," forbiddenPathsDict: ",JSON.stringify(forbiddenPathsDict))
+              
+              break;
+          }
+      }
+
+      if (newBoxCanBeAdded) {
+          const augmentedField = augmentWithBox(field, newBoxIndex, newBoxOption, numBoxesSoFar);
+          field = _.cloneDeep(augmentedField);
+
+          currentPath.push([newBoxOption, newBoxIndex])
+          stateStack.push({"numBoxes":numBoxesSoFar+1, "field":_.cloneDeep(augmentedField), "currentPath": _.cloneDeep(currentPath)})
+
+          numBoxesSoFar += 1;
+
+          if(!isAtLeastMAdjacentInAllRectangles(field,minSize,minSize)){
+          //if(!hasWHAdjacentEmpty(field,2,2)){
+          //if(false){
+            if (currentPath.length == 0){
+              currentPath = [[null,null]]
+            }
+
+            const [lastBoxOption, lastIndex] = currentPath.pop();
+
+            storeForbiddenPath(forbiddenPathsDict, String(currentPath), lastIndex, lastBoxOption);
+
+            if(stateStack.length == 0){
+              stateStack = []
+              field = createField(width, height);
+              stateStack.push({"numBoxes":0, "field":_.cloneDeep(field), "currentPath": []})
+            }
+
+            prevStateFromStack = stateStack.pop()
+            numBoxesSoFar = _.cloneDeep(prevStateFromStack["numBoxes"])
+            field = _.cloneDeep(prevStateFromStack["field"]);
+            currentPath = _.cloneDeep(prevStateFromStack["currentPath"])
+          } 
+          
+      } else {
+        if (currentPath.length == 0){
+          currentPath = [[null,null]]
+        }
+
+        const [lastBoxOption, lastIndex] = currentPath.pop();
+
+        storeForbiddenPath(forbiddenPathsDict, String(currentPath), lastIndex, lastBoxOption);
+
+        if(stateStack.length == 0){
+          stateStack = []
+          field = createField(width, height);
+          stateStack.push({"numBoxes":0, "field":_.cloneDeep(field), "currentPath": []})
+        }
+        
+        prevStateFromStack = stateStack.pop()
+        numBoxesSoFar = _.cloneDeep(prevStateFromStack["numBoxes"])
+        field = _.cloneDeep(prevStateFromStack["field"]);
+        currentPath = _.cloneDeep(prevStateFromStack["currentPath"])
+          /*if (currentPath.length === 0) {
+              field = createField(width, height);
+
+              numBoxesSoFar = 0;
+
+              //
+              stateStack = []
+              stateStack.push({"numBoxes":numBoxesSoFar, "field":_.cloneDeep(field)})
+              ///
+          } else {
+              const [lastBoxOption, lastIndex] = currentPath.pop();
+
+              storeForbiddenPath(forbiddenPathsDict, String(currentPath), lastIndex, lastBoxOption);
+
+              if (currentPath.length === 0 || stateStack.length === 0) {
+                  field = createField(width, height);
+
+                  numBoxesSoFar = 0;
+
+                  //
+                  stateStack = []
+                  stateStack.push({"numBoxes":numBoxesSoFar, "field":_.cloneDeep(field)})
+                  ///
+              } else {
+                  //
+                  prevStateFromStack = stateStack.pop()
+                  numBoxesSoFar = prevStateFromStack["numBoxes"]
+                  field = _.cloneDeep(prevStateFromStack["field"]);
+                  ///
+                  /// 
+              }
+          }*/
+      }
+
+      runNumber++;
+
+      if (runNumber % 1 === 0) {
+        //postMessage(field);
+        //postMessage({"currentPath": currentPath})
+        //delay(10000000);
+      }
+
+      if (runNumber % 100000 === 0) {
+          break;
+      }
+
+      //postMessage(runNumber);
+    }
+
+  }
+
+  
+  // Post the result back to the main thread
+  if(theSequence.length > 0){
+    if(bentoIsFilledAppropriately(field, numBoxesSoFar, numBoxes)){
+      postMessage(field);
+      postMessage("complete");
     }else{
       postMessage("partial");
     }
