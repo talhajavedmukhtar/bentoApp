@@ -999,6 +999,27 @@ function dos(e) {
 
 };
 
+function getMinDimensions(seqLeft,minSize, maxSize, width, height){
+  let minWidth = Infinity
+  let minHeight = Infinity
+
+  for(const size in seqLeft){
+    let boxOptions = getBoxOptions(minSize, maxSize, width, height);
+
+    for(const boxOption in boxOptions){
+      if (boxOption[0] < minWidth) {
+        minWidth = boxOption[0]
+      }
+      if (boxOption[1] < minHeight){
+        minHeight = boxOption[1]
+      }
+    }
+  }
+
+  return {"minWidth":minWidth,"minHeight":minHeight}
+
+}
+
 onmessage = function (e) {
   // Receive the data sent from the main thread
   const { width, height, numBoxes, minSize, maxSize } = e.data;
@@ -1078,6 +1099,13 @@ onmessage = function (e) {
             return a[1] - b[1]; 
           });
 
+          validCandidateIndices.sort((a, b) => {
+            if (a[0] === b[0]) {
+              return a[1] - b[1]; 
+            }
+            return a[0] - b[0]; 
+          });
+
           if (validCandidateIndices.length > 0) {
               newBoxCanBeAdded = true;
               newBoxOption = boxOption;
@@ -1098,6 +1126,9 @@ onmessage = function (e) {
 
           numBoxesSoFar += 1;
 
+          //let minDimensions = getMinDimensions(theSequence.slice(numBoxesSoFar-1), minSize, maxSize, width, height)
+
+          //if(!isAtLeastMAdjacentInAllRectangles(field,minDimensions["minWidth"],minDimensions["minHeight"])){
           if(!isAtLeastMAdjacentInAllRectangles(field,minSize,minSize)){
           //if(!hasWHAdjacentEmpty(field,2,2)){
           //if(false){
@@ -1182,7 +1213,23 @@ onmessage = function (e) {
         //delay(10000000);
       }
 
-      if (runNumber % 10000 === 0) {
+      if(runNumber % 500 == 0){
+        theSequence = findSequenceOfLengthBest(width * height, boxSizes, numBoxes, boxOptions);
+        shuffle(theSequence);
+
+        stateStack = []
+        field = createField(width, height);
+        stateStack.push({"numBoxes":0, "field":_.cloneDeep(field), "currentPath": []})
+
+        prevStateFromStack = stateStack.pop()
+        numBoxesSoFar = _.cloneDeep(prevStateFromStack["numBoxes"])
+        field = _.cloneDeep(prevStateFromStack["field"]);
+        currentPath = _.cloneDeep(prevStateFromStack["currentPath"])
+
+        postMessage({"sequence": theSequence, "id": 2})
+      }
+
+      if (runNumber % 100000 === 0) {
           break;
       }
 

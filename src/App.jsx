@@ -606,6 +606,10 @@ function App() {
 
      // console.log("Message!!!: ",field)
 
+      const endTime = performance.now();
+      const timeTaken = endTime - startTime;
+      setTimetaken(timeTaken)
+
       if(!field){
         setError(true)
         setErrorMessage("Invalid num of boxes")
@@ -640,9 +644,6 @@ function App() {
         }else{
           setError(false)
           setProcessing(false)
-          const endTime = performance.now();
-          const timeTaken = endTime - startTime;
-          setTimetaken(timeTaken)
           if(!visualizing){
             setVisualizing(true)
             visualizeField(field, width, height).then((visualized) => {
@@ -720,14 +721,14 @@ function App() {
         <br/>
         Seq Num: {sequenceNumber}*/}
         {/*<br/>
-        Progress: {progress}*/}
-        {/*<br/>
+        Progress: {progress}
+        <br/>
         Max populated: {maxPopulated}
         <br/>
         Current Path: ({currentPath.length}) : {JSON.stringify(currentPath)}*/}
 
         <br/>
-        {!processing && <p>{timeTaken == 0 ? "" : "Time taken: " + (timeTaken/ 1000).toFixed(2) + " s / " + (timeTaken/ 60000).toFixed(2) + " m"}</p>}
+        {<p>{timeTaken == 0 ? "" : "Time elapsed: " + (timeTaken/ 1000).toFixed(2) + " s / " + (timeTaken/ 60000).toFixed(2) + " m"}</p>}
       </div>
       
     </div>
