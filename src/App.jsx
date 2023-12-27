@@ -29,7 +29,7 @@ function App() {
   const [width, setWidth] = useState(8)
   const [height, setHeight] = useState(4)
   const [numBoxes, setNumBoxes] = useState(7)
-  const [minSize, setMinSize] = useState(1)
+  const [minSize, setMinSize] = useState(2)
   const [maxSize, setMaxSize] = useState(4)
 
   const [sequence, setSequence] = useState([])
@@ -49,7 +49,7 @@ function App() {
 
   
   useEffect(()=>{
-    console.log("Visualizing now: ",visualizing)
+    //console.log("Visualizing now: ",visualizing)
   }, [visualizing])
 
   const createField = (width, height) => {
@@ -117,7 +117,7 @@ function App() {
   // Function to visualize the field
   const visualizeField = async (field,w,h) => {
     let rand = Math.floor(Math.random() * 2000)
-    console.log("???Lets get it:", rand)
+    //console.log("???Lets get it:", rand)
 
     let size = 10 / (w > h ? w : 2*h);
 
@@ -162,7 +162,7 @@ function App() {
       visualizedField.push(<div key={`${i}-${rand}`} style={{lineHeight: '0em'}}>{row}</div>);
     }
 
-    console.log("Lets get it???:", rand)
+    //console.log("Lets get it???:", rand)
     return visualizedField;
   };
 
@@ -647,11 +647,11 @@ function App() {
           if(!visualizing){
             setVisualizing(true)
             visualizeField(field, width, height).then((visualized) => {
-              console.log("Done bro")
+              //console.log("Done bro")
               setField(visualized)
               //setVisualizing(false)
             }).finally(() => {
-              console.log("bro!")
+              //console.log("bro!")
               setVisualizing(false);
             });
           }
@@ -716,8 +716,8 @@ function App() {
         {!processing && error && <p>{errorMessage}</p>}
         {!processing && !error && field}
 
-
-        {/*Seq: {sequence.toString()}
+        {/*<br/>
+        Seq: {sequence.toString()}
         <br/>
         Seq Num: {sequenceNumber}*/}
         {/*<br/>
