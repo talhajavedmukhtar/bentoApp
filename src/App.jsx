@@ -12,6 +12,7 @@ function App() {
 
   const isMobile = window.innerWidth <= 768;
 
+  //Make the key private; add to env
   const firebaseConfig = {
   apiKey: "AIzaSyDs7OhdjYAaLsZeDBEXyxi3hGxfIVEmnac",
   authDomain: "bento-app-b64c5.firebaseapp.com",

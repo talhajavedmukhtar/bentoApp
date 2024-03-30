@@ -1024,6 +1024,13 @@ onmessage = function (e) {
   // Receive the data sent from the main thread
   const { width, height, numBoxes, minSize, maxSize } = e.data;
 
+  let sizeFactor = width*height*numBoxes*2
+
+  if (sizeFactor < 500){
+    //console.log("Fixed size")
+    sizeFactor = 500
+  }
+
   let field = createField(width, height);
 
   const boxOptions = getBoxOptions(minSize, maxSize, width, height);
@@ -1083,12 +1090,12 @@ onmessage = function (e) {
           for (const candidateIndex of candidateIndices) {
               //const pathStr = `${candidateIndex},${boxOption}`;
               const pathStr = `${boxOption},${candidateIndex}`;
-              console.log("Path str: ",pathStr)
-              console.log("Retrieve: ",retrieveForbiddenPaths(forbiddenPathsDict, String(currentPath)))
+              //console.log("Path str: ",pathStr)
+              //console.log("Retrieve: ",retrieveForbiddenPaths(forbiddenPathsDict, String(currentPath)))
               if (!retrieveForbiddenPaths(forbiddenPathsDict, String(currentPath)).includes(pathStr)) {
                   validCandidateIndices.push(candidateIndex);
               } else{
-                console.log("Forbidden!!!")
+                //console.log("Forbidden!!!")
               }
           }
 
@@ -1111,7 +1118,7 @@ onmessage = function (e) {
               newBoxOption = boxOption;
               newBoxIndex = validCandidateIndices[0];
 
-              console.log("About to shoot shot::: index: ",newBoxIndex," box: ",newBoxOption, " all indices: ",JSON.stringify(validCandidateIndices)," forbiddenPathsDict: ",JSON.stringify(forbiddenPathsDict))
+              //console.log("About to shoot shot::: index: ",newBoxIndex," box: ",newBoxOption, " all indices: ",JSON.stringify(validCandidateIndices)," forbiddenPathsDict: ",JSON.stringify(forbiddenPathsDict))
               
               break;
           }
@@ -1213,7 +1220,8 @@ onmessage = function (e) {
         //delay(10000000);
       }
 
-      if(runNumber % 500 == 0){
+      //if(runNumber % 500 == 0){
+      if(runNumber % sizeFactor == 0){
         theSequence = findSequenceOfLengthBest(width * height, boxSizes, numBoxes, boxOptions);
         shuffle(theSequence);
 
@@ -1226,7 +1234,9 @@ onmessage = function (e) {
         field = _.cloneDeep(prevStateFromStack["field"]);
         currentPath = _.cloneDeep(prevStateFromStack["currentPath"])
 
-        postMessage({"sequence": theSequence, "id": 2})
+
+        triedSequences += 1
+        postMessage({"sequence": theSequence, "id": triedSequences})
       }
 
       if (runNumber % 100000 === 0) {
