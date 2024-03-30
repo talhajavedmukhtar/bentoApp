@@ -12,8 +12,9 @@ function App() {
 
   const isMobile = window.innerWidth <= 768;
 
+
   const firebaseConfig = {
-  apiKey: "AIzaSyDs7OhdjYAaLsZeDBEXyxi3hGxfIVEmnac",
+  apiKey: process.env.FIREBASE_API_KEY,
   authDomain: "bento-app-b64c5.firebaseapp.com",
   projectId: "bento-app-b64c5",
   storageBucket: "bento-app-b64c5.appspot.com",
