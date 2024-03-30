@@ -12,7 +12,6 @@ function App() {
 
   const isMobile = window.innerWidth <= 768;
 
-
   const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
   authDomain: "bento-app-b64c5.firebaseapp.com",
@@ -55,10 +54,6 @@ function App() {
 
   // Function to convert a string to a color
   const stringToColor = async (string) => {
-    /*const hashBuffer = await crypto.subtle.digestSync('SHA-256', new TextEncoder().encode(string));
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');*/
-
     const hash = sha256.create().update(string).hex();
 
     const hashHex = hash.substring(0, 18);

@@ -7,5 +7,5 @@ ReactDOM.render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
-  document.getElementById('root') // Mount the app into the root element in your HTML file
+  document.getElementById('root') 
 );
